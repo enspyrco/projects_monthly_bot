@@ -1,0 +1,15 @@
+name: projects_monthly_bot
+description: A nyxx bot for the Project Monthly Discord server.
+version: 0.0.0-a1
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.2.6
+
+dependencies:
+  nyxx: ^6.0.0
+  google_generative_ai: ^0.2.2
+
+dev_dependencies:
+  lints: ^2.1.0
+  test: ^1.24.0
