@@ -1,12 +1,17 @@
 import 'dart:io';
 
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:nyxx/nyxx.dart';
+
+late final GenerativeModel model;
 
 void main(List<String> arguments) async {
   final theBotToken = Platform.environment['THE_BOT_TOKEN'];
-  final geminiToken = Platform.environment['GEMINI_TOKEN'];
-  final apiKey = Platform.environment['API_KEY'];
-  verifyEnvVars(theBotToken, geminiToken, apiKey);
+  final geminiBotToken = Platform.environment['GEMINI_BOT_TOKEN'];
+  final geminiApiKey = Platform.environment['GEMINI_API_KEY'];
+  verifyEnvVars(theBotToken, geminiBotToken, geminiApiKey);
+
+  model = GenerativeModel(model: 'gemini-1.0-pro', apiKey: geminiApiKey!);
 
   final theBotClient = await Nyxx.connectGateway(
     theBotToken!,
@@ -15,7 +20,7 @@ void main(List<String> arguments) async {
   );
 
   final geminiClient = await Nyxx.connectGateway(
-    geminiToken!,
+    geminiBotToken!,
     GatewayIntents.allUnprivileged,
     options: GatewayClientOptions(plugins: [logging, cliIntegration]),
   );
@@ -25,7 +30,7 @@ void main(List<String> arguments) async {
   theBotClient.onMessageCreate.listen((event) async {
     if (event.mentions.contains(theBotUser)) {
       await event.message.channel.sendMessage(MessageBuilder(
-        content: 'Hi There!',
+        content: 'Hi from the_bot!',
         replyId: event.message.id,
       ));
     }
@@ -35,8 +40,18 @@ void main(List<String> arguments) async {
 
   geminiClient.onMessageCreate.listen((event) async {
     if (event.mentions.contains(geminiBotUser)) {
+      // TODO: Don't assume gemini mention is at the start
+      final contentString = event.message.content.replaceRange(0, 23, '');
+      final content = [Content.text(contentString)];
+      final response = await model.generateContent(content);
+
+      String responseString = response.text!;
+      if (responseString.length > 2000) {
+        responseString = responseString.substring(0, 2000);
+      }
+
       await event.message.channel.sendMessage(MessageBuilder(
-        content: 'Hi There!',
+        content: responseString,
         replyId: event.message.id,
       ));
     }
